@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign In — Concrete Mix Design</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">🏗️</div>
+    <h2>Concrete Mix Design</h2>
+  </div>
+  <div class="top-actions">
+    <button class="account-btn" onclick="location.href='register.html'">Create Account</button>
+  </div>
+</header>
+
+<div class="auth-outer">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">🔐</div>
+      <h2>Welcome Back</h2>
+      <p>Sign in to access your concrete mix designs</p>
+    </div>
+    <div class="auth-body">
+      <div id="authMsg"></div>
+
+      <div class="form-row">
+        <label>Email Address</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <span class="error" id="errEmail"></span>
+      </div>
+
+      <div class="form-row">
+        <label>Password</label>
+        <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+        <span class="error" id="errPass"></span>
+      </div>
+
+      <div class="form-row" style="display:flex;justify-content:space-between;align-items:center">
+        <label style="text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:var(--text);margin:0;cursor:pointer">
+          <input type="checkbox" id="remember"> Remember me
+        </label>
+        <span class="link-muted" onclick="alert('Password reset not available in demo.')">Forgot password?</span>
+      </div>
+
+      <div class="form-row">
+        <button class="primary-btn btn-full" id="loginBtn" onclick="doLogin()">Sign In</button>
+      </div>
+
+      <div class="auth-divider">or</div>
+
+      <button class="secondary-btn btn-full" onclick="guestLogin()">Continue as Guest →</button>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="register.html">Create one free</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // We intentionally do not auto-redirect when a prior session exists; stay on this page.
+
+  // Clear any stale session data before login
+  function clearStaleData() {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('concrete_')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  }
+
+  function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPassword').value;
+    let ok = true;
+
+    document.querySelectorAll('.error').forEach(e => e.textContent = '');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('errEmail').textContent = 'Enter a valid email address';
+      ok = false;
+    }
+    if (!pass || pass.length < 6) {
+      document.getElementById('errPass').textContent = 'Password must be at least 6 characters';
+      ok = false;
+    }
+    if (!ok) return;
+
+    // Clear any stale data first
+    clearStaleData();
+
+    const btn = document.getElementById('loginBtn');
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+
+    // Try server-side login via login.php
+    fetch('login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        localStorage.setItem('concrete_logged_in', '1');
+        localStorage.setItem('concrete_user_name',  data.data.name);
+        localStorage.setItem('concrete_user_email', data.data.email);
+        localStorage.setItem('concrete_user_role',  data.data.role);
+        if (document.getElementById('remember').checked)
+          localStorage.setItem('concrete_remember', '1');
+        showMsg('success', '✅ Login successful! Redirecting…');
+        setTimeout(() => location.href = 'index.html', 800);
+      } else {
+        btn.textContent = 'Sign In'; btn.disabled = false;
+        showMsg('error', '❌ ' + (data.message || 'Login failed'));
+      }
+    })
+    .catch(() => {
+      // Fallback: demo login (no server available)
+      localStorage.setItem('concrete_logged_in', '1');
+      localStorage.setItem('concrete_user_name',  email.split('@')[0]);
+      localStorage.setItem('concrete_user_email', email);
+      localStorage.setItem('concrete_user_role',  'Engineer');
+      showMsg('success', '✅ Login successful! Redirecting…');
+      setTimeout(() => location.href = 'index.html', 800);
+    });
+  }
+
+  function guestLogin() {
+    // Clear any stale data first before logging in as guest
+    clearStaleData();
+    
+    localStorage.setItem('concrete_logged_in', '1');
+    localStorage.setItem('concrete_user_name',  'Guest User');
+    localStorage.setItem('concrete_user_email', 'guest@demo.com');
+    localStorage.setItem('concrete_user_role',  'Guest');
+    location.href = 'index.html';
+  }
+
+  function showMsg(type, msg) {
+    const el = document.getElementById('authMsg');
+    el.innerHTML = `<div class="${type === 'success' ? 'success' : 'error'}" style="${type==='error'?'background:var(--error-bg);padding:12px 16px;border-radius:6px;border-left:4px solid var(--error)':''}">${msg}</div>`;
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

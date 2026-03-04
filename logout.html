@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Logging out…</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Clear ALL concrete-related localStorage items completely
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('concrete_')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    // Also clear any design data
+    localStorage.removeItem('concrete_designs');
+    localStorage.removeItem('concrete_mix_data');
+    
+    setTimeout(() => location.href = 'login.html', 800);
+  </script>
+</head>
+<body>
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)">
+    <div style="text-align:center;color:var(--text-muted)">
+      <div style="font-size:48px;margin-bottom:12px">👋</div>
+      <p style="font-size:16px;font-weight:600">Logging you out…</p>
+    </div>
+  </div>
+</body>
+</html>

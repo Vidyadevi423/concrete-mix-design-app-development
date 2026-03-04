@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account — Concrete Mix Design</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .acct-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+    .acct-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      border: 3px solid rgba(255,255,255,.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; flex-shrink: 0;
+    }
+    .acct-hero h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .acct-hero p  { font-size: 13px; opacity: .8; margin: 0 0 8px; }
+    .role-pill {
+      display: inline-block; background: var(--accent);
+      color: #1e3a5f; font-size: 11px; font-weight: 700;
+      padding: 3px 12px; border-radius: 20px;
+    }
+    .acct-tabs {
+      display: flex; gap: 4px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      padding: 10px 18px; border: none; background: none;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      color: var(--text-muted); border-bottom: 2px solid transparent;
+      margin-bottom: -2px; transition: all .2s; font-family: inherit;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .info-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 0; border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .ir-label { width: 140px; color: var(--text-muted); font-weight: 500; flex-shrink: 0; }
+    .info-row .ir-val   { font-weight: 600; }
+    .change-pw-row { display: none; }
+    .change-pw-row.show { display: block; }
+    .login-status-card {
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      text-align: center;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      margin-bottom: 16px;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 768px) {
+      .acct-hero {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 22px 20px;
+      }
+      .acct-hero h2 { font-size: 18px; }
+      .acct-hero p  { margin-bottom: 4px; }
+      .acct-hero, .acct-tabs { width: 100%; }
+      .acct-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .tab-btn { padding: 10px 12px; white-space: nowrap; }
+      .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .info-row .ir-label { width: auto; font-size: 12px; }
+    }
+
+    @media (max-width: 480px) {
+      .acct-hero { text-align: left; }
+      .acct-avatar { width: 60px; height: 60px; font-size: 26px; }
+      .tab-btn { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-brand"><div class="brand-icon">🏗️</div><h2>Concrete Mix Design</h2></div>
+  <div class="top-actions">
+    <button class="nav-toggle" id="navToggle">☰</button>
+    <button class="account-btn" onclick="location.href='index.html'">🏠 Home</button>
+  </div>
+</header>
+<div class="container">
+  <nav id="sidebar" class="sidebar">
+    <div class="sidebar-label">Navigation</div>
+    <ul>
+      <li><a href="index.html">🏠 Dashboard</a></li>
+      <li><a href="mix.html">➕ New Mix Design</a></li>
+      <li><a href="saved.html">💾 Saved Designs</a></li>
+      <li><a href="settings.html">⚙️ Settings</a></li>
+      <li><a href="help.html">❓ Help &amp; Support</a></li>
+    </ul>
+    <div class="sidebar-divider"></div>
+    <ul><li><a href="logout.html">🚪 Logout</a></li></ul>
+  </nav>
+
+  <main>
+
+    <!-- Loading -->
+    <div id="loadingBlock" style="text-align:center;padding:48px 0;color:var(--text-muted)">
+      <div style="font-size:32px;margin-bottom:12px">⏳</div>
+      <p>Loading account…</p>
+    </div>
+
+    <!-- Not Logged In -->
+    <div id="guestBlock" style="display:none">
+      <h2>👤 Account</h2>
+      <div class="login-status-card">
+        <div style="font-size:48px;margin-bottom:12px">🔒</div>
+        <h3 style="font-size:18px;margin-bottom:8px">Not Signed In</h3>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">
+          Sign in or create an account to save designs and access your profile.
+        </p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <a href="login.html" class="primary-btn" style="text-decoration:none">🔑 Sign In</a>
+          <a href="register.html" class="secondary-btn" style="text-decoration:none">✏️ Create Account</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logged In -->
+    <div id="acctBlock" style="display:none">
+
+      <!-- Hero -->
+      <div class="acct-hero">
+        <div class="acct-avatar" id="avatarEl">👤</div>
+        <div>
+          <h2 id="heroName">—</h2>
+          <p id="heroEmail">—</p>
+          <span class="role-pill" id="heroPill">—</span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="acct-tabs">
+        <button class="tab-btn active" onclick="switchTab('profile',this)">Profile</button>
+        <button class="tab-btn"        onclick="switchTab('designs',this)">My Designs</button>
+        <button class="tab-btn"        onclick="switchTab('security',this)">Security</button>
+      </div>
+
+      <!-- ── Profile Tab ── -->
+      <div id="tab-profile" class="tab-pane active">
+        <div class="card" style="max-width:540px">
+          <div class="card-header"><div class="card-icon">📋</div><h3>Profile Information</h3></div>
+          <div id="msgProfile"></div>
+          <div class="info-row"><span class="ir-label">Full Name</span><span class="ir-val" id="pName">—</span></div>
+          <div class="info-row"><span class="ir-label">Email</span><span class="ir-val" id="pEmail">—</span></div>
+          <div class="info-row"><span class="ir-label">Role</span><span class="ir-val" id="pRole">—</span></div>
+
+          <hr class="divider" style="margin:20px 0">
+          <h4 style="font-size:14px;margin-bottom:14px">Edit Profile</h4>
+          <div class="form-grid" style="margin-bottom:16px">
+            <div class="form-row"><label>Full Name</label><input id="editName" type="text" placeholder="Your name"></div>
+            <div class="form-row"><label>Email</label><input id="editEmail" type="email" placeholder="you@example.com"></div>
+          </div>
+          <div class="form-grid" style="margin-bottom:16px">
+            <div class="form-row"><label>Role</label>
+              <select id="editRole">
+                <option>Engineer</option><option>Student</option>
+                <option>Technician</option><option>Other</option>
+              </select>
+            </div>
+          </div>
+          <button class="primary-btn btn-full" onclick="saveProfile()">💾 Save Changes</button>
+        </div>
+      </div>
+
+      <!-- ── Designs Tab ── -->
+      <div id="tab-designs" class="tab-pane">
+        <div class="page-header" style="margin-bottom:16px">
+          <h3 style="font-size:16px;font-weight:700">My Saved Designs</h3>
+          <a href="mix.html" class="primary-btn" style="text-decoration:none;padding:8px 16px;font-size:13px">➕ New Design</a>
+        </div>
+        <div id="designsList"></div>
+      </div>
+
+      <!-- ── Security Tab ── -->
+      <div id="tab-security" class="tab-pane">
+        <div class="card" style="max-width:440px">
+          <div class="card-header"><div class="card-icon">🔒</div><h3>Change Password</h3></div>
+          <div id="msgSecurity"></div>
+          <div class="form-row"><label>Current Password</label><input id="curPw" type="password" placeholder="Current password"></div>
+          <div class="form-row"><label>New Password</label><input id="newPw" type="password" placeholder="Min 6 characters"></div>
+          <div class="form-row"><label>Confirm New Password</label><input id="confPw" type="password" placeholder="Repeat new password"></div>
+          <button class="primary-btn btn-full" onclick="changePassword()">🔒 Update Password</button>
+          <hr class="divider">
+          <button class="btn-danger btn-full" onclick="location.href='logout.html'">🚪 Sign Out of Account</button>
+        </div>
+      </div>
+
+    </div><!-- /acctBlock -->
+  </main>
+</div>
+
+<script src="app.js"></script>
+<script>
+let userData = null;
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'designs') loadDesigns();
+}
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderUser(u) {
+  userData = u;
+  document.getElementById('heroName').textContent  = u.full_name || '—';
+  document.getElementById('heroEmail').textContent = u.email     || '—';
+  document.getElementById('heroPill').textContent  = u.role      || '—';
+  document.getElementById('pName').textContent     = u.full_name || '—';
+  document.getElementById('pEmail').textContent    = u.email     || '—';
+  document.getElementById('pRole').textContent     = u.role      || '—';
+  // Pre-fill edit fields
+  document.getElementById('editName').value  = u.full_name      || '';
+  document.getElementById('editEmail').value = u.email          || '';
+  document.getElementById('editRole').value  = u.role           || 'Engineer';
+  // Avatar letter
+  document.getElementById('avatarEl').textContent = (u.full_name||'U')[0].toUpperCase();
+}
+
+function loadDesigns() {
+  const container = document.getElementById('designsList');
+  container.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Loading…</p>';
+
+  fetch('save_design.php')
+    .then(async (r) => {
+      const data = await r.json().catch(() => ({ success:false, message:'Invalid response' }));
+      return { status: r.status, data };
+    })
+    .then(res => {
+      if (res.status === 401) {
+        container.innerHTML = '<p style="color:var(--error)">Please sign in to view your designs.</p>';
+        return;
+      }
+      const designs = res.data.success ? (res.data.data || []) : [];
+      if (!designs.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>No designs saved yet</p>
+          <a href="mix.html" class="primary-btn" style="text-decoration:none;display:inline-flex;margin-top:12px">Create First Design</a></div>`;
+        return;
+      }
+      container.innerHTML = `<ul class="designs-list">${designs.map(d => `
+        <li class="design-item">
+          <div class="design-info">
+            <h4>${escHtml(d.name||'Mix Design')}</h4>
+            <p>Grade: ${escHtml(d.grade||'—')} &nbsp;·&nbsp; W/C: ${d.wc_ratio||d.wcRatio||'—'} &nbsp;·&nbsp;
+               ${(d.created_at||d.date) ? new Date(d.created_at||d.date).toLocaleDateString('en-IN') : '—'}</p>
+          </div>
+          <span class="design-badge">${escHtml(d.grade||'M20')}</span>
+          <div class="design-actions">
+            <button class="btn-danger" style="padding:6px 12px;font-size:12px" onclick="deleteDesign(${d.id||0},'${escHtml(d.name||'')}')"
+              >🗑️</button>
+          </div>
+        </li>`).join('')}</ul>`;
+    })
+    .catch(() => container.innerHTML = '<p style="color:var(--text-muted)">Could not load designs.</p>');
+}
+
+function deleteDesign(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  fetch('save_design.php?id='+id, { method:'DELETE' })
+    .then(r => r.json())
+    .then(d => { if (d.success) loadDesigns(); else alert(d.message); })
+    .catch(() => { alert('Error deleting design'); });
+}
+
+function saveProfile() {
+  const body = {
+    name:         document.getElementById('editName').value.trim(),
+    email:        document.getElementById('editEmail').value.trim(),
+    role:         document.getElementById('editRole').value,
+  };
+  const msg = document.getElementById('msgProfile');
+
+  // Basic email validation client-side
+  if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+    msg.innerHTML = showErr('Please enter a valid email address.');
+    return;
+  }
+
+  fetch('update_profile.php', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+  })
+  .then(r => r.json())
+  .then(data => {
+    msg.innerHTML = `<div class="${data.success?'success':'error'}" style="${!data.success?'background:var(--error-bg);padding:12px;border-radius:6px;border-left:4px solid var(--error)':''}">${data.message}</div>`;
+    if (data.success) {
+      localStorage.setItem('concrete_user_name', body.name);
+      localStorage.setItem('concrete_user_email', body.email);
+      localStorage.setItem('concrete_user_role', body.role);
+      location.reload();
+    }
+  })
+  .catch(() => {
+    // localStorage fallback
+    if (body.name)  localStorage.setItem('concrete_user_name', body.name);
+    if (body.email) localStorage.setItem('concrete_user_email', body.email);
+    if (body.role)  localStorage.setItem('concrete_user_role', body.role);
+    msg.innerHTML = '<div class="success">✅ Profile updated (local).</div>';
+  });
+}
+
+function changePassword() {
+  const cur  = document.getElementById('curPw').value;
+  const nw   = document.getElementById('newPw').value;
+  const conf = document.getElementById('confPw').value;
+  const msg  = document.getElementById('msgSecurity');
+  if (!cur || !nw || !conf)             { msg.innerHTML = showErr('All fields required'); return; }
+  if (nw.length < 6)                    { msg.innerHTML = showErr('New password must be 6+ chars'); return; }
+  if (nw !== conf)                      { msg.innerHTML = showErr('New passwords do not match'); return; }
+
+  fetch('update_profile.php', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ current_password: cur, new_password: nw })
+  })
+  .then(r => r.json())
+  .then(data => {
+    msg.innerHTML = data.success
+      ? '<div class="success">✅ Password changed successfully!</div>'
+      : showErr(data.message);
+    if (data.success) { document.getElementById('curPw').value=''; document.getElementById('newPw').value=''; document.getElementById('confPw').value=''; }
+  })
+  .catch(() => msg.innerHTML = showErr('Server unavailable'));
+}
+
+function showErr(m) {
+  return `<div class="error" style="background:var(--error-bg);padding:12px;border-radius:6px;border-left:4px solid var(--error);margin-bottom:12px">❌ ${m}</div>`;
+}
+
+function localUserFromStorage() {
+  if (!localStorage.getItem('concrete_logged_in')) return null;
+  return {
+    full_name: localStorage.getItem('concrete_user_name')  || 'User',
+    email:     localStorage.getItem('concrete_user_email') || 'user@example.com',
+    role:      localStorage.getItem('concrete_user_role')  || 'Engineer'
+  };
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+(function(){
+  const loading = document.getElementById('loadingBlock');
+  const guest   = document.getElementById('guestBlock');
+  const acct    = document.getElementById('acctBlock');
+
+  // Try DB first
+  fetch('get_user.php')
+    .then(r => r.json())
+    .then(data => {
+      loading.style.display = 'none';
+      if (data.success && data.data) {
+        acct.style.display = 'block';
+        renderUser(data.data);
+      } else {
+        const localUser = localUserFromStorage();
+        if (localUser) {
+          acct.style.display = 'block';
+          renderUser(localUser);
+        } else {
+          guest.style.display = 'block';
+        }
+      }
+    })
+    .catch(() => {
+      loading.style.display = 'none';
+      const localUser = localUserFromStorage();
+      if (localUser) {
+        acct.style.display = 'block';
+        renderUser(localUser);
+      } else {
+        guest.style.display = 'block';
+      }
+    });
+})();
+</script>
+</body>
+</html>

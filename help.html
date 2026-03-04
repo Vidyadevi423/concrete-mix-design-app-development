@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Help &amp; Support — Concrete Mix Design</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Step Cards ── */
+.steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .step-num {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--primary-light), var(--primary));
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .step-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .step-card p  { font-size: 13px; color: var(--text-muted); line-height: 1.7; margin: 0; }
+
+    /* ── FAQ Accordion ── */
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .faq-q {
+      width: 100%; text-align: left;
+      background: none; border: none;
+      padding: 16px 20px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      color: var(--text);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px;
+      transition: background .15s;
+    }
+    .faq-q:hover { background: var(--surface-2); }
+    .faq-q .faq-icon { font-size: 18px; transition: transform .25s; flex-shrink: 0; }
+    .faq-q.open .faq-icon { transform: rotate(45deg); }
+    .faq-a {
+      max-height: 0; overflow: hidden;
+      transition: max-height .3s ease, padding .3s;
+      padding: 0 20px;
+      font-size: 13px; color: var(--text-muted); line-height: 1.8;
+    }
+    .faq-a.open { max-height: 300px; padding: 0 20px 16px; }
+
+    /* ── Contact Card ── */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 0;
+    }
+    .contact-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 14px;
+    }
+    .contact-item .ci-icon { font-size: 24px; flex-shrink: 0; }
+    .contact-item strong  { display: block; font-weight: 700; margin-bottom: 2px; font-size: 13px; }
+    .contact-item a       { color: var(--primary-light); text-decoration: none; font-size: 13px; }
+    .contact-item a:hover { text-decoration: underline; }
+
+    /* ── Reference Card ── */
+    .ref-card {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 14px;
+      margin-bottom: 0;
+    }
+    .ref-card .ref-icon { font-size: 28px; flex-shrink: 0; }
+    .ref-card a { color: var(--primary-light); font-weight: 600; }
+
+    @media(max-width:768px){
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">🏗️</div>
+    <h2>Concrete Mix Design</h2>
+  </div>
+  <div class="top-actions">
+    <button class="nav-toggle" id="navToggle">☰</button>
+    <button class="account-btn" onclick="location.href='account.html'">👤 Account</button>
+  </div>
+</header>
+
+<div class="container">
+  <nav id="sidebar" class="sidebar">
+    <div class="sidebar-label">Navigation</div>
+    <ul>
+      <li><a href="index.html">🏠 Dashboard</a></li>
+      <li><a href="mix.html">➕ New Mix Design</a></li>
+      <li><a href="saved.html">💾 Saved Designs</a></li>
+      <li><a href="settings.html">⚙️ Settings</a></li>
+      <li><a href="help.html" class="active">❓ Help &amp; Support</a></li>
+    </ul>
+    <div class="sidebar-divider"></div>
+    <ul><li><a href="logout.html">🚪 Logout</a></li></ul>
+  </nav>
+
+  <main>
+
+    <!-- Hero -->
+    <div class="help-hero">
+      <div class="h-icon">🆘</div>
+      <div>
+        <h2>Help &amp; Support Centre</h2>
+        <p>Find answers, step-by-step guides, and contact our support team</p>
+      </div>
+    </div>
+
+    <!-- How to Use Steps -->
+    <div class="card" id="howto">
+      <div class="card-header"><div class="card-icon">📘</div><h3>How to Use the App</h3></div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <h4>Sign In or Register</h4>
+          <p>Create a free account or log in to access the full system and save your designs securely.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <h4>Open Mix Design</h4>
+          <p>Click "New Mix Design" from the sidebar. Select concrete grade, aggregate size, and exposure details.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <h4>Enter Parameters</h4>
+          <p>Fill in slump value, W/C ratio, admixture %, and standard deviation as per your project requirements.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <h4>Calculate</h4>
+          <p>Hit the Calculate button. The system follows IS 10262:2009 to compute all material quantities.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">5</div>
+          <h4>Review Results</h4>
+          <p>View cement, water, fine &amp; coarse aggregate masses, mix ratio, and estimated cost per m³.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">6</div>
+          <h4>Save Design</h4>
+          <p>Save the design with a name. Access it anytime from Saved Designs. All data is stored in the database.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact & About -->
+    <div class="card" id="contact">
+      <div class="card-header"><div class="card-icon">📩</div><h3>Contact Support</h3></div>
+      <p style="font-size:14px;margin-bottom:12px;">Email: <a href="mailto:support@concretemixapp.com">support@concretemixapp.com</a></p>
+    </div>
+    <div class="card"><div class="card-header" style="margin-top:6px;"><div class="card-icon">ℹ️</div><h3>About This App</h3></div>
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.8;margin:0;">
+        This application is designed to help civil engineers automate concrete mix design calculations quickly and accurately using standard methods.
+      </p></div>
+    </div>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+<script>
+function toggleFaq(btn) {
+  const answer = btn.nextElementSibling;
+  const isOpen = answer.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-a').forEach(a => a.classList.remove('open'));
+  document.querySelectorAll('.faq-q').forEach(q => q.classList.remove('open'));
+  // Open clicked (if it was closed)
+  if (!isOpen) { answer.classList.add('open'); btn.classList.add('open'); }
+}
+</script>
+</body>
+</html>
+

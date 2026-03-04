@@ -1,0 +1,433 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New Mix Design — Concrete App</title>
+  <link rel="stylesheet" href="style.css?v=2">
+  <style>
+    .text-xs-comment {
+      font-size: 0.65rem;
+      color: #6b7280;
+    }
+  </style>
+  <script src="calculator.js"></script>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon">🏗️</div>
+      <h2>Concrete Mix Design</h2>
+    </div>
+    <div class="top-actions">
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
+      <button class="account-btn" onclick="location.href='account.html'">👤 Account</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-label">Navigation</div>
+      <ul>
+        <li><a href="index.html">🏠 Dashboard</a></li>
+        <li><a href="mix.html" class="active">➕ New Mix Design</a></li>
+        <li><a href="report.html">📄 Report</a></li>
+        <li><a href="saved.html">💾 Saved Designs</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
+        <li><a href="help.html">❓ Help &amp; Support</a></li>
+      </ul>
+      <div class="sidebar-divider"></div>
+      <ul>
+        <li><a href="logout.html">🚪 Logout</a></li>
+      </ul>
+    </nav>
+
+    <main>
+
+        <div class="help-hero">
+          <div class="h-icon">➕</div>
+          <div> 
+        <h2> New Mix Design</h2>
+        <p>📗IS 10262:2019 Reference</p>
+        </div>
+      </div>
+
+      <!-- Input Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">⚙️</div>
+          <h3>Design Inputs &amp; Parameters</h3>
+        </div>
+
+        <div class="form-row">
+          <label>Design Name (optional)</label>
+          <input id="designName" type="text" placeholder="e.g. Foundation Mix, Column Mix…">
+        </div>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Concrete Grade</label>
+            <select id="fck">
+              <option value="20" selected>M20</option>
+              <option value="25">M25</option>
+              <option value="30">M30</option>
+              <option value="40">M40</option>
+              <option value="50">M50</option>
+              <option value="80">M80</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Max Aggregate Size (mm)</label>
+            <select id="max-agg-size">
+              <option value="10">10 mm</option>
+              <option value="20" selected>20 mm</option>
+              <option value="40">40 mm</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-3">
+          <div class="form-row">
+            <label>Slump (mm)</label>
+            <input type="number" id="slump" value="50" min="25" step="5" placeholder="50">
+          </div>
+          <div class="form-row">
+            <label>Target W/C Ratio</label>
+            <input type="number" id="w-c-ratio" value="0.5" min="0.25" max="0.65" step="0.01">
+          </div>
+          <div class="form-row">
+            <label>Admixture % (of Cement)</label>
+            <input type="number" id="admixture-percentage" value="0" min="0" max="5" step="0.1">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Standard Deviation (S)</label>
+          <input type="number" id="std-dev" value="5.0" min="3.5" max="6.5" step="0.1">
+        </div>
+
+        <div class="cost-card p-4 rounded-xl mt-4">
+          <h3 class="text-md font-semibold mb-3 text-gray-700">Material Costs (Per Unit in INR)</h3>
+          <div class="cost-grid top-row">
+            <!-- Cement Cost -->
+            <div class="cost-item top">
+              <label for="cost-cement" class="block text-xs font-medium text-gray-700 mb-1">Cement (INR/kg)</label>
+              <input type="number" id="cost-cement" value="5.5" min="1" step="0.1" class="w-full p-2 border rounded-lg"
+                placeholder="5.5">
+            </div>
+            <!-- Sand Cost -->
+            <div class="cost-item top">
+              <label for="cost-sand" class="block text-xs font-medium text-gray-700 mb-1">Sand (INR/kg)</label>
+              <input type="number" id="cost-sand" value="0.8" min="0.1" step="0.1" class="w-full p-2 border rounded-lg"
+                placeholder="0.8">
+            </div>
+            <!-- Agg Cost -->
+            <div class="cost-item top">
+              <label for="cost-agg" class="block text-xs font-medium text-gray-700 mb-1">Gravel (INR/kg)</label>
+              <input type="number" id="cost-agg" value="0.9" min="0.1" step="0.1" class="w-full p-2 border rounded-lg"
+                placeholder="0.9">
+            </div>
+          </div>
+          <div class="cost-grid bottom-row">
+            <!-- Admixture Cost -->
+            <div class="cost-item bottom">
+              <label for="cost-admixture" class="block text-xs font-medium text-gray-700 mb-1">Admix (INR/kg)</label>
+              <input type="number" id="cost-admixture" value="150" min="10" step="10"
+                class="w-full p-2 border rounded-lg" placeholder="150">
+            </div>
+            <!-- Water Cost (Nominal) -->
+            <div class="cost-item bottom">
+              <label for="cost-water" class="block text-xs font-medium text-gray-700 mb-1">Water (INR/L)</label>
+              <input type="number" id="cost-water" value="0.05" min="0" step="0.01" class="w-full p-2 border rounded-lg"
+                placeholder="0.05">
+            </div>
+          </div>
+
+          <div id="calcError" class="error" style="display:none;margin-bottom:12px"></div>
+
+          <div class="btn-group">
+            <button class="primary-btn" id="calcBtn" onclick="runCalc()">🧮 Calculate Mix</button>
+            <button class="secondary-btn" onclick="resetForm()">⟲ Reset</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Results Card -->
+      <div id="resultsCard" class="card" style="display:none">
+        <div class="card-header">
+          <div class="card-icon">📊</div>
+          <h3>Calculation Results</h3>
+        </div>
+
+        <div class="result-box" style="margin-bottom:20px">
+          <div class="result-row"><span class="rlabel">Target Mean Strength</span><span class="rvalue big"
+              id="out-strength"></span></div>
+          <div class="result-row"><span class="rlabel">W/C Ratio</span><span class="rvalue" id="out-wc"></span></div>
+          <div class="result-row"><span class="rlabel">Mix Ratio (by Mass)</span><span class="rvalue"
+              id="out-ratio"></span></div>
+          <div class="result-row"><span class="rlabel">Estimated Cost (per m³)</span><span class="rvalue big"
+              id="out-cost"></span></div>
+        </div>
+
+        <h3 style="font-size:15px;margin-bottom:12px">Material Quantities per m³</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+          <div class="stat-card">
+            <div class="stat-icon slate">🧱</div>
+            <div>
+              <div class="stat-value" id="out-cement" style="font-size:20px"></div>
+              <div class="stat-label">Cement (kg)</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue">💧</div>
+            <div>
+              <div class="stat-value" id="out-water" style="font-size:20px"></div>
+              <div class="stat-label">Water (L)</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber">🏖️</div>
+            <div>
+              <div class="stat-value" id="out-sand" style="font-size:20px"></div>
+              <div class="stat-label">Sand (kg)</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon slate">⛏️</div>
+            <div>
+              <div class="stat-value" id="out-coarse" style="font-size:20px"></div>
+              <div class="stat-label">Coarse Agg (kg)</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">🧪</div>
+            <div>
+              <div class="stat-value" id="out-admix" style="font-size:20px"></div>
+              <div class="stat-label">Admixture (kg)</div>
+            </div>
+          </div>
+        </div>
+
+          <div class="save-section">
+            <div id="saveMsg" style="display:none" class="success">✅ Design saved successfully! <a href="saved.html">View
+                Saved Designs →</a></div>
+
+            <div class="btn-group">
+              <button class="btn-accent" onclick="saveDesign()">💾 Save to My Designs</button>
+              <a href="saved.html" class="secondary-btn" style="text-decoration:none">📋 View All Saved</a>
+              <button class="secondary-btn" onclick="generateReport()">📄 Export Report</button>
+            </div>
+          </div>
+        </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let lastResult = null;
+
+    function buildReportPayload() {
+      if (!lastResult) return null;
+      const name = document.getElementById('designName').value.trim() || 'Mix Design Report';
+      return {
+        name,
+        generatedOn: new Date().toLocaleString(),
+        inputs: lastResult.inputs,
+        result: lastResult.result
+      };
+    }
+
+    function syncReportData() {
+      const payload = buildReportPayload();
+      if (!payload) return false;
+      try {
+        localStorage.setItem('mixDesignReportData', JSON.stringify(payload));
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function runCalc() {
+      const fck = parseInt(document.getElementById('fck').value);
+      const aggSz = parseInt(document.getElementById('max-agg-size').value);
+      const slump = parseInt(document.getElementById('slump').value);
+      const wc = parseFloat(document.getElementById('w-c-ratio').value);
+      const admix = parseFloat(document.getElementById('admixture-percentage').value);
+      const stdDev = parseFloat(document.getElementById('std-dev').value);
+
+      const errEl = document.getElementById('calcError');
+      errEl.style.display = 'none';
+
+      const inputs = { fck, maxAggSize: aggSz, slump, wcRatio: wc, admixturePercentage: admix, stdDev };
+
+      let result;
+      try {
+        if (window.ConcreteCalculator) {
+          const errs = window.ConcreteCalculator.validateInputs(inputs);
+          if (errs.length) { errEl.textContent = errs.join(', '); errEl.style.display = 'block'; return; }
+          result = window.ConcreteCalculator.calculateMixDesign(inputs);
+        } else {
+          // Built-in fallback calculator
+          result = fallbackCalc(inputs);
+        }
+      } catch (e) {
+        result = fallbackCalc(inputs);
+      }
+
+      lastResult = { inputs, result };
+      syncReportData();
+
+      const r = result.results, c = result.cost || {};
+      document.getElementById('out-strength').textContent = (r.targetMeanStrength || (fck + 1.65 * stdDev).toFixed(1)) + ' MPa';
+      document.getElementById('out-wc').textContent = wc;
+      document.getElementById('out-ratio').textContent = r.mixRatio || '1:1.5:3';
+      document.getElementById('out-cost').textContent = '₹ ' + ((c.total || 0).toFixed ? (c.total || 0).toFixed(2) : c.total || 'N/A');
+      document.getElementById('out-cement').textContent = r.cementContent || '—';
+      document.getElementById('out-water').textContent = r.waterContent || '—';
+      document.getElementById('out-sand').textContent = r.sandMass || '—';
+      document.getElementById('out-coarse').textContent = r.coarseMass || '—';
+      document.getElementById('out-admix').textContent = r.admixtureContent || '0';
+
+      document.getElementById('saveMsg').style.display = 'none';
+      document.getElementById('resultsCard').style.display = 'block';
+      document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function fallbackCalc(inp) {
+      // Simple IS 10262 approximation
+      const fck = inp.fck;
+      const wc = inp.wcRatio;
+      const target = (fck + 1.65 * inp.stdDev).toFixed(1);
+      const water = inp.maxAggSize === 20 ? 186 : (inp.maxAggSize === 40 ? 165 : 200);
+      const cement = Math.round(water / wc);
+      const vol = 1 - (cement / 3150) - (water / 1000) - (inp.admixturePercentage / 100 * cement / 1250);
+      const sand = Math.round(vol * 0.42 * 2650);
+      const coarse = Math.round(vol * 0.58 * 2700);
+      const admix = +(inp.admixturePercentage / 100 * cement).toFixed(2);
+      const ratio = `1 : ${(sand / cement).toFixed(2)} : ${(coarse / cement).toFixed(2)}`;
+      const cost = (cement * 6.5 + water * 0.01 + sand * 1.2 + coarse * 1.0 + admix * 50).toFixed(2);
+
+      // Detailed breakdown
+      const densities = {
+        cement: 3150,
+        water: 1000,
+        admixture: 1250,
+        aggregate: 2700
+      };
+      const volumes = {
+        Vc: cement / densities.cement,
+        Vw: water / densities.water,
+        Vadm: admix / densities.admixture || 0,
+        Va_total: vol,
+        Vca: coarse / 2700,
+        Vfa: sand / 2650
+      };
+      const massPerM3 = {
+        cement,
+        water,
+        admixture: admix,
+        sand,
+        agg: coarse
+      };
+
+      return {
+        results: { targetMeanStrength: target, mixRatio: ratio, cementContent: cement, waterContent: water, sandMass: sand, coarseMass: coarse, admixtureContent: admix },
+        cost: { total: parseFloat(cost) },
+        details: { densities, volumes, massPerM3 }
+      };
+    }
+
+    function saveDesign() {
+      if (!lastResult) return;
+      const { inputs, result } = lastResult;
+      const r = result.results, c = result.cost || {};
+      const gradeMap = { 20: 'M20', 25: 'M25', 30: 'M30', 40: 'M40', 50: 'M50', 80: 'M80' };
+      const grade = gradeMap[inputs.fck] || ('M' + inputs.fck);
+      const name = document.getElementById('designName').value.trim() || (grade + ' Mix Design');
+
+      const dbPayload = {
+        name,
+        grade,
+        fck: inputs.fck,
+        wc_ratio: inputs.wcRatio,
+        slump: inputs.slump,
+        max_agg_size: inputs.maxAggSize,
+        admixture_pct: inputs.admixturePercentage,
+        std_dev: inputs.stdDev,
+        target_strength: r.targetMeanStrength,
+        cement_content: r.cementContent,
+        water_content: r.waterContent,
+        sand_mass: r.sandMass,
+        coarse_mass: r.coarseMass,
+        admixture_mass: r.admixtureContent,
+        mix_ratio: r.mixRatio,
+        est_cost: (c.total || 0).toFixed ? +(c.total || 0).toFixed(2) : c.total,
+      };
+
+      const msg = document.getElementById('saveMsg');
+      msg.style.display = 'block';
+      msg.innerHTML = 'Saving design...';
+
+      // Try to save to DB
+      fetch('saved.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dbPayload)
+      })
+        .then(async (r) => {
+          const data = await r.json().catch(() => ({ success: false, message: 'Invalid server response' }));
+          return { status: r.status, ok: r.ok, data };
+        })
+        .then(data => {
+          if (data.status === 401) {
+            msg.innerHTML = '⚠️ Please sign in to save designs. <a href="login.html">Sign in →</a>';
+            return;
+          }
+          if (data.data?.success || data.ok) {
+            msg.innerHTML = '✅ Design saved successfully! <a href="saved.html">View Saved Designs →</a>';
+          } else {
+            msg.innerHTML = '❌ Could not save to database. ' + (data.data?.message || 'Please try again.');
+          }
+        })
+        .catch(() => {
+          msg.innerHTML = '❌ Network error. Please ensure the server is running and you are logged in.';
+        });
+
+      msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function resetForm() {
+      document.getElementById('designName').value = '';
+      document.getElementById('fck').value = '20';
+      document.getElementById('max-agg-size').value = '20';
+      document.getElementById('slump').value = '50';
+      document.getElementById('w-c-ratio').value = '0.5';
+      document.getElementById('admixture-percentage').value = '0';
+      document.getElementById('std-dev').value = '5.0';
+      document.getElementById('resultsCard').style.display = 'none';
+      lastResult = null;
+    }
+
+    // Generate full report in a dedicated page
+    function generateReport() {
+      if (!lastResult) { alert('Please calculate a mix first.'); return; }
+      if (!syncReportData()) {
+        alert('Unable to prepare report data. Please try again.');
+        return;
+      }
+
+      const reportWindow = window.open('report.html', '_blank');
+      if (!reportWindow) {
+        location.href = 'report.html';
+      }
+    }
+
+  </script>
+</body>
+
+</html>

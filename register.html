@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Account - Concrete Mix Design</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon">🔨</div>
+      <h2>Concrete Mix Design</h2>
+    </div>
+    <div class="top-actions">
+      <button class="account-btn" onclick="location.href='login.html'">Sign In</button>
+    </div>
+  </header>
+
+  <div class="auth-outer">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">🧱</div>
+        <h2>Create Account</h2>
+        <p>Register to save designs and track your work</p>
+      </div>
+
+      <form class="auth-body" id="regForm" method="post" action="register.php" novalidate>
+        <div id="authMsg"></div>
+        <div class="form-row">
+          <label for="regName">Full Name</label>
+          <input id="regName" name="full_name" type="text" placeholder="Your full name" autocomplete="name" required>
+          <span class="error" id="errName"></span>
+        </div>
+
+        <div class="form-row">
+          <label for="regEmail">Email Address</label>
+          <input id="regEmail" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+          <span class="error" id="errEmail"></span>
+        </div>
+
+        <div class="form-row">
+          <label for="regRole">Role</label>
+          <select id="regRole" name="role">
+            <option value="Engineer">Engineer</option>
+            <option value="Student">Student</option>
+            <option value="Technician">Technician</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="regPassword">Password</label>
+            <input id="regPassword" name="password" type="password" placeholder="Min 6 characters"
+              autocomplete="new-password" required>
+            <span class="error" id="errPass"></span>
+          </div>
+          <div class="form-row">
+            <label for="regConfirm">Confirm Password</label>
+            <input id="regConfirm" name="confirm" type="password" placeholder="Repeat password"
+              autocomplete="new-password" required>
+            <span class="error" id="errConfirm"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <button class="primary-btn btn-full" id="regBtn" type="submit">Create Account</button>
+        </div>
+
+        <div class="auth-footer">
+          Already have an account? <a href="login.html">Sign in</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('regForm');
+    const btn = document.getElementById('regBtn');
+
+    function showMsg(type, msg) {
+      const el = document.getElementById('authMsg');
+      const isErr = type === 'error';
+      el.innerHTML = `<div class="${isErr ? 'error' : 'success'}" style="${isErr ? 'background:var(--error-bg);padding:12px 16px;border-radius:6px;border-left:4px solid var(--error)' : ''}">${msg}</div>`;
+    }
+
+    form.addEventListener('submit', function (e) {
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const pw = document.getElementById('regPassword').value;
+      const conf = document.getElementById('regConfirm').value;
+      let ok = true;
+
+      document.querySelectorAll('.error').forEach(el => el.textContent = '');
+
+      if (!name) { document.getElementById('errName').textContent = 'Full name is required'; ok = false; }
+      if (!email || !/^([^\s@]+)@([^\s@]+)\.([^\s@]+)$/.test(email)) {
+        document.getElementById('errEmail').textContent = 'Enter a valid email'; ok = false;
+      }
+      if (!pw || pw.length < 6) {
+        document.getElementById('errPass').textContent = 'Password must be at least 6 characters'; ok = false;
+      }
+      if (pw !== conf) {
+        document.getElementById('errConfirm').textContent = 'Passwords do not match'; ok = false;
+      }
+
+      if (!ok) {
+        e.preventDefault();
+        return;
+      }
+
+      btn.textContent = 'Creating account...';
+      btn.disabled = true;
+    });
+
+    // Display server messages from query parameters
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('error')) showMsg('error', params.get('error'));
+    if (params.has('success')) showMsg('success', params.get('success'));
+  </script>
+</body>
+</html>
