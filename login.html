@@ -1,0 +1,225 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign In — Concrete Mix Design</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <h2>Concrete Mix Design</h2>
+  </div>
+  <div class="top-actions">
+    <button class="account-btn" onclick="location.href='register.html'">Create Account</button>
+  </div>
+</header>
+
+<div class="auth-outer">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Welcome Back</h2>
+      <p>Sign in to access your concrete mix designs</p>
+    </div>
+    <div class="auth-body">
+      <div id="authMsg"></div>
+
+      <div class="form-row">
+        <label>Email Address</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <span class="error" id="errEmail"></span>
+      </div>
+
+      <div class="form-row">
+        <label>Password</label>
+        <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+        <span class="error" id="errPass"></span>
+      </div>
+
+      <div class="form-row" style="display:flex;align-items:center">
+        <label style="text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:var(--text);margin:0;cursor:pointer">
+          <input type="checkbox" id="remember"> Remember me
+        </label>
+      </div>
+
+      <div class="form-row">
+        <button class="primary-btn btn-full" id="loginBtn" onclick="doLogin()">Sign In</button>
+      </div>
+
+      <div class="auth-divider">or</div>
+
+      <button class="secondary-btn btn-full" onclick="guestLogin()">Continue as Guest →</button>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="register.html">Create one free</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // "Remember me" stores only the email (for convenience) and uses a secure server cookie to keep the user signed in.
+  // Passwords are NOT stored in localStorage.
+
+  const REMEMBER_KEYS = {
+    flag: 'concrete_remember',
+    email: 'concrete_remember_email'
+  };
+
+  function applyRememberPreference(email) {
+    const rememberChecked = document.getElementById('remember').checked;
+    if (rememberChecked) {
+      localStorage.setItem(REMEMBER_KEYS.flag, '1');
+      localStorage.setItem(REMEMBER_KEYS.email, email || '');
+      return;
+    }
+    localStorage.removeItem(REMEMBER_KEYS.flag);
+    localStorage.removeItem(REMEMBER_KEYS.email);
+  }
+
+  function loadRememberedEmail() {
+    const remember = localStorage.getItem(REMEMBER_KEYS.flag) === '1';
+    if (!remember) return;
+    document.getElementById('remember').checked = true;
+    document.getElementById('loginEmail').value = localStorage.getItem(REMEMBER_KEYS.email) || '';
+  }
+
+  function wireRememberLiveSync() {
+    const remember = document.getElementById('remember');
+    const emailEl = document.getElementById('loginEmail');
+
+    remember.addEventListener('change', () => {
+      applyRememberPreference(emailEl.value.trim());
+    });
+
+    emailEl.addEventListener('input', () => {
+      if (remember.checked) applyRememberPreference(emailEl.value.trim());
+    });
+  }
+
+    async function redirectIfAlreadyLoggedIn() {
+    // 1) If server session / remember-cookie is active => redirect right away
+    try {
+      const r = await fetch('get_user.php', { credentials: 'same-origin' });
+      const data = await r.json().catch(() => null);
+      if (data && data.success) {
+        location.href = 'index.html';
+        return;
+      }
+    } catch (_) {}
+
+    // 2) Fallback: local demo mode (when PHP server isn't reachable)
+    const remember = localStorage.getItem(REMEMBER_KEYS.flag) === '1';
+    const loggedIn = localStorage.getItem('concrete_logged_in') === '1';
+    if (remember && loggedIn) {
+      location.href = 'index.html';
+    }
+  }
+
+  // Clear any stale session data before login
+  function clearStaleData() {
+    const keepKeys = new Set([
+      REMEMBER_KEYS.flag,
+      REMEMBER_KEYS.email,
+      'concrete_theme'
+    ]);
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('concrete_') && !keepKeys.has(key)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  }
+
+  function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPassword').value;
+    const remember = document.getElementById('remember').checked;
+    let ok = true;
+
+    document.querySelectorAll('.error').forEach(e => e.textContent = '');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('errEmail').textContent = 'Enter a valid email address';
+      ok = false;
+    }
+    if (!pass || pass.length < 6) {
+      document.getElementById('errPass').textContent = 'Password must be at least 6 characters';
+      ok = false;
+    }
+    if (!ok) return;
+
+    // Clear any stale data first
+    clearStaleData();
+
+    const btn = document.getElementById('loginBtn');
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+
+    // Try server-side login via login.php
+    fetch('login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ email, password: pass, remember })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        localStorage.setItem('concrete_logged_in', '1');
+        localStorage.setItem('concrete_user_name',  data.data.name);
+        localStorage.setItem('concrete_user_email', data.data.email);
+        localStorage.setItem('concrete_user_role',  data.data.role);
+        applyRememberPreference(email);
+        showMsg('success', 'Login successful! Redirecting…');
+        setTimeout(() => location.href = 'index.html', 800);
+      } else {
+        btn.textContent = 'Sign In'; btn.disabled = false;
+        showMsg('error', '' + (data.message || 'Login failed'));
+      }
+    })
+    .catch(() => {
+      // Fallback: demo login (no server available)
+      localStorage.setItem('concrete_logged_in', '1');
+      localStorage.setItem('concrete_user_name',  email.split('@')[0]);
+      localStorage.setItem('concrete_user_email', email);
+      localStorage.setItem('concrete_user_role',  'Engineer');
+      applyRememberPreference(email);
+      showMsg('success', 'Login successful! Redirecting…');
+      setTimeout(() => location.href = 'index.html', 800);
+    });
+  }
+
+  function guestLogin() {
+    // Clear any stale data first before logging in as guest
+    clearStaleData();
+    
+    localStorage.setItem('concrete_logged_in', '1');
+    localStorage.setItem('concrete_user_name',  'Guest User');
+    localStorage.setItem('concrete_user_email', 'guest@demo.com');
+    localStorage.setItem('concrete_user_role',  'Guest');
+    location.href = 'index.html';
+  }
+
+  function showMsg(type, msg) {
+    const el = document.getElementById('authMsg');
+    el.innerHTML = `<div class="${type === 'success' ? 'success' : 'error'}" style="${type==='error'?'background:var(--error-bg);padding:12px 16px;border-radius:6px;border-left:4px solid var(--error)':''}">${msg}</div>`;
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.addEventListener('DOMContentLoaded', () => {
+    loadRememberedEmail();
+    wireRememberLiveSync();
+    redirectIfAlreadyLoggedIn();
+  });
+</script>
+</body>
+</html>
+
+
+
+

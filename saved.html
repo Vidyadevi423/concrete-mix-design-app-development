@@ -1,0 +1,336 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Saved Designs — Concrete Mix Design</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      
+      <h2>Concrete Mix Design</h2>
+    </div>
+  <div class="top-actions">
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span class="nav-toggle-icon" aria-hidden="true"></span>
+      </button>
+    <button class="account-btn" onclick="location.href='account.html'">Account</button>
+  </div>
+</header>
+  <div class="container">
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-label">Navigation</div>
+      <ul>
+        <li><a href="index.html">Dashboard</a></li>
+        <li><a href="mix.html">New Mix Design</a></li>
+        <li><a href="report.html">Report</a></li>
+        <li><a href="saved.html" class="active">Saved Designs</a></li>
+        <li><a href="settings.html">Settings</a></li>
+        <li><a href="help.html">Help &amp; Support</a></li>
+      </ul>
+      <div class="sidebar-divider"></div>
+      <ul>
+        <li><a href="logout.html">Logout</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <div class="help-hero">
+        
+        <div>
+          <h2>Saved Mix Designs</h2>
+          <p>Your previously created concrete mix designs</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="align-items:center;gap:12px">
+          
+          <h3 style="margin:0;flex:1">Your saved mix designs</h3>
+          <div class="btn-group">
+            <a href="mix.html" class="primary-btn" style="text-decoration:none">New Design</a>
+            <button class="secondary-btn" style="text-decoration:none" onclick="exportSaved()"
+              title="Download your saved designs as a JSON file">Export</button>
+            <button class="btn-danger" onclick="clearAll()" id="clearBtn" style="display:none">Clear All</button>
+          </div>
+        </div>
+        <div id="countBadge" style="margin:12px 0"></div>
+        <ul id="savedList" class="designs-list" style="margin:0"></ul>
+      </div>
+
+      <div id="detailModal"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:16px">
+        <div
+          style="background:var(--surface);border-radius:var(--radius);max-width:540px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
+          <div
+            style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <h3 id="modalTitle" style="margin:0;font-size:17px">Design Details</h3>
+            <button onclick="closeModal()"
+              style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);padding:0 4px">×</button>
+          </div>
+          <div id="modalBody" style="padding:24px"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let allDesigns = [];
+
+    function escHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function isNominalDesign(d) {
+      // Heuristic: nominal mixes saved from mix.html typically store 0/empty for IS10262-only fields.
+      const slump = Number(d.slump ?? 0);
+      const maxAgg = Number(d.max_agg_size ?? 0);
+      const stdDev = Number(d.std_dev ?? 0);
+      const admixturePct = Number(d.admixture_pct ?? 0);
+      const hasNominalRatio = !!(d.mix_ratio && String(d.mix_ratio).includes(':'));
+      return hasNominalRatio && slump === 0 && maxAgg === 0 && stdDev === 0 && admixturePct === 0;
+    }
+
+    function num(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function formatMoney(v) {
+      const n = num(v);
+      if (n === null) return '—';
+      return '₹ ' + n.toFixed(2);
+    }
+
+    function renderSaved(designs) {
+      const list = document.getElementById('savedList');
+      const badge = document.getElementById('countBadge');
+      const clearBtn = document.getElementById('clearBtn');
+      list.innerHTML = '';
+
+      if (!designs.length) {
+        list.innerHTML = `
+      <div class="empty-state">
+        
+        <p>No saved designs yet.</p>
+        <a href="mix.html" class="primary-btn" style="text-decoration:none;display:inline-flex;margin-top:16px">Create Your First Design</a>
+      </div>`;
+        badge.innerHTML = '';
+        clearBtn.style.display = 'none';
+        return;
+      }
+
+      badge.innerHTML = `<span class="badge badge-blue">${designs.length} design${designs.length !== 1 ? 's' : ''} saved</span>`;
+      clearBtn.style.display = '';
+
+      designs.forEach((d, idx) => {
+        const dateStr = (d.created_at || d.date)
+          ? new Date(d.created_at || d.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+          : '—';
+        const nominal = isNominalDesign(d);
+        const est = nominal ? (d.est_cost ?? d.estimated_cost) : (d.est_cost ?? d.estimated_cost);
+        const costLine = (est !== null && est !== undefined && est !== '') ? (' · Cost/m³: ' + formatMoney(est)) : '';
+        list.innerHTML += `
+      <li class="design-item">
+        <div class="design-info">
+          <h4>${escHtml(d.name || d.mix_name || 'Mix Design #' + (idx + 1))}</h4>
+          <p>
+            ${nominal ? 'Type: Nominal' : 'Type: Design'} ·
+            Grade: ${escHtml(d.grade || '—')} ·
+            W/C: ${d.wc_ratio || '—'} ·
+            Saved: ${dateStr}${costLine}
+          </p>
+        </div>
+        <span class="design-badge">${escHtml(d.grade || '—')}</span>
+        <div class="design-actions">
+          <button class="secondary-btn" style="padding:6px 12px;font-size:12px" onclick="viewDetail(${idx})">View</button>
+          <button class="secondary-btn" style="padding:6px 12px;font-size:12px" onclick="openReport(${idx})">Report</button>
+          <button class="btn-danger" style="padding:6px 12px;font-size:12px" onclick="deleteDesign(${d.id}, ${idx})">Delete</button>
+        </div>
+      </li>`;
+      });
+    }
+
+    function openReport(idx) {
+      const d = allDesigns[idx];
+      if (!d) return;
+
+      const nominal = isNominalDesign(d);
+
+      let payload;
+      if (nominal) {
+        const bagWeight = 50;
+        const cementKg = num(d.cement_content);
+        const cementBags = cementKg !== null ? (cementKg / bagWeight) : null;
+        payload = {
+          mode: 'nominal',
+          name: d.name || d.mix_name || 'Mix Design Report',
+          generatedOn: new Date().toLocaleString(),
+          inputs: {
+            grade: d.grade || null,
+            fck: d.fck ?? null,
+            wcRatio: d.wc_ratio ?? null
+          },
+          result: {
+            results: {
+              targetMeanStrength: null,
+              mixRatio: d.mix_ratio,
+              cementContent: d.cement_content,
+              cementBags: cementBags !== null ? +cementBags.toFixed(2) : null,
+              waterContent: d.water_content,
+              sandMass: d.sand_mass,
+              coarseMass: d.coarse_mass,
+              admixtureContent: 0
+            },
+            cost: {
+              currency: 'INR',
+              perM3: (d.est_cost ?? d.estimated_cost) ?? null
+            },
+            details: { volumes: {} }
+          }
+        };
+      } else {
+        payload = {
+          name: d.name || d.mix_name || 'Mix Design Report',
+          generatedOn: new Date().toLocaleString(),
+          inputs: {
+            fck: d.fck,
+            wcRatio: d.wc_ratio,
+            slump: d.slump,
+            maxAggSize: d.max_agg_size,
+            admixturePercentage: d.admixture_pct,
+            stdDev: d.std_dev
+          },
+          result: {
+            results: {
+              targetMeanStrength: d.target_strength,
+              mixRatio: d.mix_ratio,
+              cementContent: d.cement_content,
+              waterContent: d.water_content,
+              sandMass: d.sand_mass,
+              coarseMass: d.coarse_mass,
+              admixtureContent: d.admixture_mass
+            },
+            cost: {
+              total: d.est_cost
+            }
+          }
+        };
+      }
+
+      try {
+        localStorage.setItem('mixDesignReportData', JSON.stringify(payload));
+      } catch (e) {
+        alert('Unable to prepare report data for this design.');
+        return;
+      }
+
+      const w = window.open('report.html', '_blank');
+      if (!w) location.href = 'report.html';
+    }
+
+    function viewDetail(idx) {
+      const d = allDesigns[idx];
+      document.getElementById('modalTitle').textContent = d.name || d.mix_name || 'Mix Design';
+      const date = (d.created_at || d.date) ? new Date(d.created_at || d.date).toLocaleString() : '—';
+      const nominal = isNominalDesign(d);
+      const bagWeight = 50;
+      const cementKg = num(d.cement_content);
+      const cementBags = cementKg !== null ? (cementKg / bagWeight) : null;
+      const est = (d.est_cost ?? d.estimated_cost);
+      const sandKg = num(d.sand_mass);
+      const coarseKg = num(d.coarse_mass);
+      const waterL = num(d.water_content);
+
+      document.getElementById('modalBody').innerHTML = `
+    <div class="result-box">
+      <div class="result-row"><span class="rlabel">Type</span><span class="rvalue">${nominal ? 'Nominal' : 'Design'}</span></div>
+      <div class="result-row"><span class="rlabel">Grade</span><span class="rvalue">${escHtml(d.grade || '—')}</span></div>
+      <div class="result-row"><span class="rlabel">W/C Ratio</span><span class="rvalue">${d.wc_ratio || '—'}</span></div>
+      <div class="result-row"><span class="rlabel">Mix Ratio</span><span class="rvalue">${escHtml(d.mix_ratio || '—')}</span></div>
+      <div class="result-row"><span class="rlabel">Cement</span><span class="rvalue">${cementKg !== null ? cementKg + ' kg' : '—'}</span></div>
+      <div class="result-row"><span class="rlabel">Cement Bags</span><span class="rvalue">${cementBags !== null ? cementBags.toFixed(2) : '—'}</span></div>
+      <div class="result-row"><span class="rlabel">Sand</span><span class="rvalue">${sandKg !== null ? sandKg + ' kg' : '—'}</span></div>
+      <div class="result-row"><span class="rlabel">Coarse Aggregate</span><span class="rvalue">${coarseKg !== null ? coarseKg + ' kg' : '—'}</span></div>
+      <div class="result-row"><span class="rlabel">Water</span><span class="rvalue">${waterL !== null ? waterL + ' L' : '—'}</span></div>
+      <div class="result-row"><span class="rlabel">Cost per m<sup>3</sup></span><span class="rvalue big">${formatMoney(est)}</span></div>
+      <div class="result-row"><span class="rlabel">Saved On</span><span class="rvalue" style="font-size:13px">${date}</span></div>
+    </div>`;
+      document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').style.display = 'none';
+    }
+
+    // Download all saved designs as JSON to user's device
+    function exportSaved() {
+      if (!allDesigns.length) { alert('No saved designs to export.'); return; }
+      const ts = new Date();
+      const fname = `saved-designs-${ts.getFullYear()}${String(ts.getMonth() + 1).padStart(2, '0')}${String(ts.getDate()).padStart(2, '0')}.json`;
+      const blob = new Blob([JSON.stringify(allDesigns, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 0);
+    }
+
+    function deleteDesign(id, idx) {
+      if (!confirm('Delete this design?')) return;
+      fetch('saved.php?id=' + id, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            allDesigns.splice(idx, 1);
+            renderSaved(allDesigns);
+          } else alert(d.message);
+        })
+        .catch(() => alert('Network error while deleting.'));
+    }
+
+    function clearAll() {
+      if (!confirm('Delete ALL saved designs? This cannot be undone.')) return;
+      Promise.all(allDesigns.map(d => fetch('saved.php?id=' + d.id, { method: 'DELETE' })))
+        .then(() => { allDesigns = []; renderSaved([]); })
+        .catch(() => alert('Network error while clearing designs.'));
+    }
+
+    function loadFromDB() {
+      fetch('saved.php')
+        .then(async (r) => {
+          const data = await r.json().catch(() => ({ success: false, message: 'Invalid response' }));
+          return { status: r.status, ok: r.ok, data };
+        })
+        .then(({ status, data }) => {
+          if (status === 401) {
+            document.getElementById('countBadge').innerHTML =
+              '<span class="badge badge-amber">Please sign in to view your saved designs.</span>';
+            renderSaved([]);
+            return;
+          }
+          allDesigns = data.success ? (data.data || []) : [];
+          renderSaved(allDesigns);
+        })
+        .catch(() => { allDesigns = []; renderSaved(allDesigns); });
+    }
+
+    document.getElementById('detailModal').addEventListener('click', function (e) {
+      if (e.target === this) closeModal();
+    });
+
+    loadFromDB();
+  </script>
+</body>
+
+</html>

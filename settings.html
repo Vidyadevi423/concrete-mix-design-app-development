@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — Concrete Mix Design</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <h2>Concrete Mix Design</h2>
+    </div>
+    <div class="top-actions">
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span class="nav-toggle-icon" aria-hidden="true"></span>
+      </button>
+      <button class="account-btn" onclick="location.href='account.html'">Account</button>
+    </div>
+  </header>
+  <div class="container">
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-label">Navigation</div>
+      <ul>
+        <li><a href="index.html">Dashboard</a></li>
+        <li><a href="mix.html">New Mix Design</a></li>
+        <li><a href="saved.html">Saved Designs</a></li>
+        <li><a href="settings.html" class="active">Settings</a></li>
+        <li><a href="help.html">Help &amp; Support</a></li>
+      </ul>
+      <div class="sidebar-divider"></div>
+      <ul>
+        <li><a href="logout.html">Logout</a></li>
+      </ul>
+    </nav>
+    <main>
+
+      <div class="help-hero">
+
+        <div>
+          <h2> Settings</h2>
+          <p>Manage your application preferences</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Appearance</h3>
+        </div>
+        <div class="form-row">
+          <label>Theme</label>
+          <select id="themeSelect">
+            <option value="Light">Light</option>
+            <option value="Dark">Dark</option>
+          </select>
+        </div>
+        <p style="font-size:13px;color:var(--text-muted)">Your theme preference is saved locally in your browser.</p>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+
+</html>

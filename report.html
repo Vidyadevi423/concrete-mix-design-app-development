@@ -1,0 +1,447 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mix Design Report</title>
+  <link rel="stylesheet" href="style.css?v=2">
+  <style>
+    .report-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .report-meta {
+      color: #4b5563;
+      margin-top: 6px;
+      margin-bottom: 18px;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
+
+    .report-table td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    .report-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .report-table td:first-child {
+      width: 38%;
+      font-weight: 600;
+      background: #f8fafc;
+      color: #111827;
+    }
+
+    .report-table td:last-child {
+      color: #1f2937;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .empty-state {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 18px;
+      color: #374151;
+    }
+
+    @media print {
+
+      .topbar,
+      .sidebar,
+      .report-actions {
+        display: none !important;
+      }
+
+      .container,
+      main {
+        display: block;
+      }
+
+      body {
+        background: #fff;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <h2>Mix Design Report</h2>
+    </div>
+    <div class="top-actions">
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span class="nav-toggle-icon" aria-hidden="true"></span>
+      </button>
+      <button class="account-btn" onclick="location.href='account.html'">Account</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-label">Navigation</div>
+      <ul>
+        <li><a href="index.html"> Dashboard</a></li>
+        <li><a href="mix.html">New Mix Design</a></li>
+        <li><a href="report.html" class="active"> Report</a></li>
+        <li><a href="saved.html"> Saved Designs</a></li>
+        <li><a href="settings.html">Settings</a></li>
+        <li><a href="help.html">Help &amp; Support</a></li>
+      </ul>
+      <div class="sidebar-divider"></div>
+      <ul>
+        <li><a href="logout.html"> Logout</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <div class="report-wrap">
+        <div class="help-hero">
+
+          <div>
+            <h2 id="reportTitle">Full Mix Report</h2>
+            <p id="reportDate" class="report-meta"></p>
+          </div>
+        </div>
+
+        <div id="reportBody"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let currentReportData = null;
+
+    function getNum(val, suffix) {
+      if (val === null || val === undefined || val === '') return '—';
+      return String(val) + (suffix || '');
+    }
+
+    function asMoney(val) {
+      if (val === null || val === undefined || val === '') return '—';
+      const n = Number(val);
+      if (Number.isNaN(n)) return val;
+      return '₹ ' + n.toFixed(2);
+    }
+
+    function createRow(label, value) {
+      return '<tr><td>' + label + '</td><td>' + value + '</td></tr>';
+    }
+
+    function buildRows(data) {
+      const inputs = data.inputs || {};
+      const result = data.result || {};
+      const r = result.results || {};
+      const c = result.cost || {};
+
+      const hasNominalVolumes =
+        result.details &&
+        result.details.volumes &&
+        (result.details.volumes.dryVolume !== undefined ||
+          result.details.volumes.sandVolume !== undefined ||
+          result.details.volumes.coarseVolume !== undefined);
+
+      const isNominal =
+        data.mode === 'nominal' ||
+        (inputs && (inputs.grade !== undefined || inputs.dryFactor !== undefined || inputs.volume !== undefined)) ||
+        hasNominalVolumes;
+
+      if (isNominal) {
+        const vols = (result.details && result.details.volumes) ? result.details.volumes : {};
+        const sandCft100 =
+          (r && typeof r.sandCft100 === 'number' && Number.isFinite(r.sandCft100)) ? r.sandCft100 :
+          (vols.sandVolume !== undefined && vols.sandVolume !== null && Number.isFinite(Number(vols.sandVolume)))
+            ? ((Number(vols.sandVolume) * 35.31466672148859) / 100)
+            : undefined;
+        const coarseCft100 =
+          (r && typeof r.coarseCft100 === 'number' && Number.isFinite(r.coarseCft100)) ? r.coarseCft100 :
+          (vols.coarseVolume !== undefined && vols.coarseVolume !== null && Number.isFinite(Number(vols.coarseVolume)))
+            ? ((Number(vols.coarseVolume) * 35.31466672148859) / 100)
+            : undefined;
+        const gradeLabel = inputs.grade ? inputs.grade : (inputs.fck !== undefined && inputs.fck !== null && inputs.fck !== '' ? ('M' + inputs.fck) : '—');
+        const rows = [
+          ['Design Name', data.name || '—'],
+          ['Concrete Grade', gradeLabel],
+          ['Concrete Volume', getNum(inputs.volume, '(m<sup>3</sup>)')],
+          ['Length', getNum(inputs.length, ' m')],
+          ['Breadth', getNum(inputs.breadth, ' m')],
+          ['Thickness', getNum(inputs.thickness, ' m')],
+          ['Concrete Type', inputs.concreteType ? (inputs.concreteType === 'plain' ? 'Plain (PCC)' : 'Reinforced (RCC)') : '—'],
+          ['Exposure Condition', inputs.exposure ? String(inputs.exposure).replace(/_/g, ' ') : '—'],
+          ['Dry Volume Factor', getNum(inputs.dryFactor)],
+          ['Dry Volume', getNum(vols.dryVolume, ' (m<sup>3</sup>)')],
+          ['Water Cement Ratio', getNum(inputs.wcRatio)],
+          ['Cement Bulk Density', getNum(inputs.cementDensity, ' kg/(m<sup>3</sup>)')],
+          ['Cement Mass', getNum(r.cementContent, ' kg')],
+          ['Cement Bags', getNum(r.cementBags)],
+          ['Sand Volume', getNum(vols.sandVolume, ' (m<sup>3</sup>)')],
+          ['Sand (100 ft<sup>3</sup>)', getNum(sandCft100, ' (100 ft<sup>3</sup>)')],
+          ['Coarse Aggregate Volume', getNum(vols.coarseVolume, ' (m<sup>3</sup>)')],
+          ['Coarse Aggregate (100 ft<sup>3</sup>)', getNum(coarseCft100, ' (100 ft<sup>3</sup>)')],
+          ['Water Quantity', getNum(r.waterContent, ' L')],
+          ['Final Mix Proportion', getNum(r.mixRatio)]
+        ];
+
+        const is456 = result.details && result.details.is456 ? result.details.is456 : null;
+        if (is456 && is456.requirements) {
+          rows.push(['IS 456 Max W/C', getNum(is456.requirements.maxWc)]);
+          rows.push(['IS 456 Min Cement', getNum(is456.requirements.minCement, ' kg/(m<sup>3</sup>)')]);
+          rows.push(['IS 456 Min Grade', is456.requirements.minGrade ? ('M' + is456.requirements.minGrade) : '—']);
+          if (is456.checks) {
+            rows.push(['IS 456 Check (W/C)', is456.checks.wcOk ? 'OK' : 'Not OK']);
+            rows.push(['IS 456 Check (Cement)', is456.checks.cementOk ? 'OK' : 'Not OK']);
+            rows.push(['IS 456 Check (Grade)', is456.checks.gradeOk ? 'OK' : 'Not OK']);
+          }
+        }
+
+        if (c) {
+          if (c.cement !== undefined) rows.push(['Cement Cost', asMoney(c.cement)]);
+          if (c.sand !== undefined) rows.push(['Sand Cost', asMoney(c.sand)]);
+          if (c.aggregate !== undefined) rows.push(['Aggregate Cost', asMoney(c.aggregate)]);
+          if (c.water !== undefined) rows.push(['Water Cost', asMoney(c.water)]);
+          if (c.total !== undefined) rows.push(['Total Cost', asMoney(c.total)]);
+          if (c.perM3 !== undefined) rows.push(['Cost (per m<sup>3</sup>)', asMoney(c.perM3)]);
+        }
+
+        return rows;
+      }
+
+      return [
+        ['Design Name', data.name || '—'],
+        ['Concrete Grade', inputs.fck ? 'M' + inputs.fck : '—'],
+        ['Target Mean Strength', getNum(r.targetMeanStrength, ' MPa')],
+        ['W/C Ratio', getNum(inputs.wcRatio)],
+        ['Slump', getNum(inputs.slump, ' mm')],
+        ['Max Aggregate Size', getNum(inputs.maxAggSize, ' mm')],
+        ['Admixture %', getNum(inputs.admixturePercentage, ' %')],
+        ['Standard Deviation (S)', getNum(inputs.stdDev)],
+        ['Water Content', getNum(r.waterContent, ' L')],
+        ['Cement Content', getNum(r.cementContent, ' kg')],
+        ['Sand Mass', getNum(r.sandMass, ' kg')],
+        ['Coarse Aggregate Mass', getNum(r.coarseMass, ' kg')],
+        ['Admixture Mass', getNum(r.admixtureContent, ' kg')],
+        ['Mix Ratio', getNum(r.mixRatio)],
+        ['Estimated Cost (per (m<sup>3</sup>))', asMoney(c.total)]
+      ];
+    }
+
+    function downloadBlob(filename, blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function csvEscape(value) {
+      const s = String(value ?? '');
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }
+
+    function makeSafeFilename(name) {
+      return String(name || 'mix_report')
+        .replace(/[\\/:*?"<>|]+/g, '_')
+        .replace(/\s+/g, '_')
+        .replace(/_+/g, '_')
+        .toLowerCase();
+    }
+
+    function normalizeExportText(value) {
+      return String(value ?? '')
+        .replace(/₹/g, 'INR ')
+        .replace(/[^\x20-\x7E]/g, ' ');
+    }
+
+    function escapePdfText(value) {
+      return normalizeExportText(value)
+        .replace(/\\/g, '\\\\')
+        .replace(/\(/g, '\\(')
+        .replace(/\)/g, '\\)');
+    }
+
+    function truncateText(value, maxLen) {
+      const s = normalizeExportText(value);
+      if (s.length <= maxLen) return s;
+      return s.slice(0, maxLen - 3) + '...';
+    }
+
+    function createTablePdf(title, subtitle, rows) {
+      const pageW = 595;
+      const x = 40;
+      const tableW = pageW - (x * 2);
+      const col1W = 210;
+      const rowH = 24;
+      const totalRows = rows.length + 1; // + header
+      const yTop = 740;
+      const yBottom = yTop - (rowH * totalRows);
+
+      const ops = [];
+      const textAt = function (fontSize, tx, ty, text) {
+        ops.push('BT /F1 ' + fontSize + ' Tf ' + tx + ' ' + ty + ' Td (' + escapePdfText(text) + ') Tj ET');
+      };
+
+      textAt(14, x, 800, truncateText(title, 70));
+      textAt(10, x, 783, truncateText(subtitle, 90));
+
+      // Header fill
+      ops.push('0.95 g');
+      ops.push(x + ' ' + (yTop - rowH) + ' ' + tableW + ' ' + rowH + ' re f');
+      ops.push('0 g');
+
+      // Table borders and grid
+      ops.push('1 w');
+      ops.push(x + ' ' + yBottom + ' ' + tableW + ' ' + (rowH * totalRows) + ' re S');
+      ops.push((x + col1W) + ' ' + yBottom + ' m ' + (x + col1W) + ' ' + yTop + ' l S');
+      for (let i = 1; i < totalRows; i++) {
+        const y = yTop - (i * rowH);
+        ops.push(x + ' ' + y + ' m ' + (x + tableW) + ' ' + y + ' l S');
+      }
+
+      // Header text
+      textAt(10, x + 6, yTop - 16, 'Field');
+      textAt(10, x + col1W + 6, yTop - 16, 'Value');
+
+      // Row text
+      for (let i = 0; i < rows.length; i++) {
+        const y = yTop - ((i + 1) * rowH) - 16;
+        textAt(10, x + 6, y, truncateText(rows[i][0], 32));
+        textAt(10, x + col1W + 6, y, truncateText(rows[i][1], 46));
+      }
+
+      const stream = ops.join('\n');
+
+      const objects = [];
+      objects.push('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+      objects.push('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+      objects.push('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n');
+      objects.push('4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n');
+      objects.push('5 0 obj\n<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream\nendobj\n');
+
+      let pdf = '%PDF-1.4\n';
+      const offsets = [0];
+      for (let i = 0; i < objects.length; i++) {
+        offsets.push(pdf.length);
+        pdf += objects[i];
+      }
+
+      const xrefPos = pdf.length;
+      pdf += 'xref\n0 6\n';
+      pdf += '0000000000 65535 f \n';
+      for (let i = 1; i <= 5; i++) {
+        pdf += String(offsets[i]).padStart(10, '0') + ' 00000 n \n';
+      }
+      pdf += 'trailer\n<< /Size 6 /Root 1 0 R >>\n';
+      pdf += 'startxref\n' + xrefPos + '\n%%EOF';
+
+      return new Blob([pdf], { type: 'application/pdf' });
+    }
+
+    function downloadCSV() {
+      if (!currentReportData) return;
+      const rows = buildRows(currentReportData);
+      const csvLines = ['S.No,Field,Value'];
+      for (let i = 0; i < rows.length; i++) {
+        csvLines.push(
+          csvEscape(i + 1) + ',' +
+          csvEscape(normalizeExportText(rows[i][0])) + ',' +
+          csvEscape(normalizeExportText(rows[i][1]))
+        );
+      }
+      const csv = '\uFEFF' + csvLines.join('\n');
+      const file = makeSafeFilename(currentReportData.name) + '.csv';
+      downloadBlob(file, new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    }
+
+    function downloadPDF() {
+      if (!currentReportData) return;
+      const rows = buildRows(currentReportData);
+      const title = currentReportData.name || 'Mix Design Report';
+      const subtitle = 'Generated on: ' + (currentReportData.generatedOn || new Date().toLocaleString());
+      const pdfBlob = createTablePdf(title, subtitle, rows);
+      const file = makeSafeFilename(currentReportData.name) + '.pdf';
+      downloadBlob(file, pdfBlob);
+    }
+
+    function loadReport() {
+      const raw = localStorage.getItem('mixDesignReportData');
+      const reportBody = document.getElementById('reportBody');
+      if (!raw) {
+        currentReportData = null;
+        reportBody.innerHTML = `
+          <div class="empty-state">
+            No report data found. Please calculate a mix in <a href="mix.html">mix.html</a>.
+          </div>
+        `;
+        return;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        currentReportData = null;
+        reportBody.innerHTML = `
+          <div class="empty-state">
+            Report data is invalid. Please generate the report again from <a href="mix.html">mix.html</a>.
+          </div>
+        `;
+        return;
+      }
+
+      currentReportData = data;
+      document.getElementById('reportTitle').textContent = data.name || 'Mix Design Report';
+      document.getElementById('reportDate').textContent = 'Generated on ' + (data.generatedOn || new Date().toLocaleString());
+
+      const rows = buildRows(data).map(function (pair) {
+        return createRow(pair[0], pair[1]);
+      });
+
+      reportBody.innerHTML = `
+        <table class="report-table">
+          <tbody>${rows.join('')}</tbody>
+        </table>
+        <div class="report-actions">
+          <button class="primary-btn" onclick="downloadPDF()">Download PDF</button>
+          <button class="secondary-btn" onclick="downloadCSV()">Download CSV</button>
+          <button class="secondary-btn" onclick="location.href='mix.html'">Back to Mix</button>
+        </div>
+      `;
+    }
+
+    loadReport();
+    window.addEventListener('storage', function (event) {
+      if (event.key === 'mixDesignReportData') {
+        loadReport();
+      }
+    });
+  </script>
+</body>
+
+</html>
